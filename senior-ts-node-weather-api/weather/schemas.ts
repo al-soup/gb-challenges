@@ -20,6 +20,3 @@ export const apiBResponseSchema = z.object({
   elevation: z.coerce.number(),
   temperature_unit: celsiusUnitSchema,
 });
-
-export type ApiAResponse = z.infer<typeof apiAResponseSchema>;
-export type ApiBResponse = z.infer<typeof apiBResponseSchema>;
