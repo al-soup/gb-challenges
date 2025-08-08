@@ -31,13 +31,6 @@ const locations = [
 // 3. SOLUTION
 // --------------------
 
-import ApiRepository from './wrappers/api.repository';
-const apiRepository = new ApiRepository();
+import { getWeather } from './weather';
 
-apiRepository
-  .getWeatherFromServiceA(locations[0].lat, locations[0].long)
-  .then((data: any) => console.log(data));
-
-apiRepository
-  .getWeatherFromServiceB(locations[1].lat, locations[1].long)
-  .then((data: any) => console.log(data));
+getWeather(locations[1].lat, locations[1].long);
