@@ -6,8 +6,9 @@
  * External library providing weather data from two different services
  * This libary has not been parsed to TypeScript yet
  */
-const ApiRepository = require("./libs/api.repository.js").default;
-const apiRepository = new ApiRepository();
+// NOTE moved to wrappers/api.repository.ts in order to use esm import in all of the project
+// const ApiRepository = require("./libs/api.repository.js").default;
+// const apiRepository = new ApiRepository();
 
 // --------------------
 // 2. MOCK DATA
@@ -30,6 +31,9 @@ const locations = [
 // 3. SOLUTION
 // --------------------
 
+import ApiRepository from "./wrappers/api.repository";
+const apiRepository = new ApiRepository();
+
 apiRepository
   .getWeatherFromServiceA(locations[0].lat, locations[0].long)
   .then((data: any) => console.log(data));
@@ -37,4 +41,3 @@ apiRepository
 apiRepository
   .getWeatherFromServiceB(locations[1].lat, locations[1].long)
   .then((data: any) => console.log(data));
-
