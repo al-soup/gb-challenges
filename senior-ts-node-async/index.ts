@@ -1,4 +1,3 @@
-// index.ts
 // --------------------
 // 1. TIMEOUT + MOCK DATA
 // --------------------
@@ -13,6 +12,13 @@ interface Impression {
   id: number;
   impressions: number;
 }
+
+type AdId = number;
+type ImpressionCount = number;
+type ImpressionSummary = {
+  totalImpressions: ImpressionCount;
+  executionTime: number; // in milliseconds
+};
 
 const ads: Ad[] = [
   { id: 1, impressionId: 1 },
@@ -55,22 +61,44 @@ export const getAdImpression = (
 // --------------------
 // 3. TASK: getAllImpressions
 // --------------------
-export const getAllImpressions = async (): Promise<void> => {
+export const getAllImpressions = async (): Promise<ImpressionSummary> => {
   const adIds = await getAllAdsIds();
   const startTime = Date.now();
 
-  for (let adId of adIds) {
+  // Each add impression is stored in a map from which we later calculate the total impressions.
+  const adImpressions = new Map<AdId, ImpressionCount>();
+
+  const fetchAdImpressions = adIds.map(async (adId: AdId) => {
     const ad = await getAdById(adId);
-    console.log("ad: ", ad);
-    const adImpressions = await getAdImpression(ad?.impressionId ?? 0);
-    console.log("adImpressions: ", adImpressions);
-  }
+    if (!ad) return;
+
+    const adImpression = await getAdImpression(ad?.impressionId);
+
+    if (adImpression) {
+      adImpressions.set(adId, adImpression.impressions);
+    }
+  });
+
+  // Run fetches for all ads concurrently. The minimum execution time of `getAdImpressions` is
+  // the greatest sum of the duration of `getAdById` + `getAdImpression` for an adId.
+  await Promise.all(fetchAdImpressions);
+
+  // Sum up the results
+  const totalImpressions = [...adImpressions.values()].reduce(
+    (total, impressions) => total + impressions,
+    0
+  );
 
   const endTime = Date.now();
-  console.log("execution time: ", endTime - startTime);
+  const executionTime = endTime - startTime;
+
+  return {
+    totalImpressions,
+    executionTime,
+  };
 };
 
 // Run to test:
 getAllImpressions()
-  .then((res) => console.log("Done:", res))
+  .then((res) => console.table(res))
   .catch((err) => console.error("Error: ", err));
