@@ -2,65 +2,61 @@
 
 ## 1. First Impressions of the APIs
 
-   Pros *API A*: Displays how the data was generated as an interesting insight. Minimal amount of information
-   Cons *API A*: Different sources don't seem to return the same format for numbers (string vs number temperature). Since we don't know how many sources there are we don't know if they some might deliver the values in Fahrenheit. Or even if we can trust the unit kind. Plus the notation of the unit might even be different: `'°C'` vs `'C'`
-   Pros *API B*: It's good to know the location where the temperature was measured and at what elevation -> very precise information. Since we are requesting temperature information for a very precise location (<https://xkcd.com/2170/>) it is good to know how far from the requested place we measure. More descriptive naming.
-   Cons *API B*: I don't see the benefit of returning the generation time. Especially with so much precision.
+| API | Pros | Cons |
+|-----|------|------|
+| **A** | Shows data generation metadata; Minimal response structure | Inconsistent data types (`string` vs `number`); Unknown amount of different source categories; Possible unit inconsistencies (°F vs °C) because of different sources; Inconsistent data types might also mean varying notation (e.g. `'°C'` vs `'C'`) |
+| **B** | Additional information like location and elevation data; Descriptive naming | Excessive timestamp precision |
 
-- Preference: *API B*
+I have a preference for **API B** because of the additional detail of the response and because I could not detect inconsistency in the data format as in API A.
 
 ## 2. Solving the Task
 
-- Need for some kind of validation and ZOD fits the bill perfectly for this job as it also comes with great type inference.
-- Imported via esm and and I also wanted to use esm for the rest of the project why I wrote a wrapper for the ApiRepository so I would not have to mix import syntax.
-- Focusing on data from API B since I prefer this response format (see [previous section](#1-first-impressions-of-the-apis))
-- To decide on a better return type I would need more information about how this function is intended to be used. In the [next section](#expanding-the-solution) I'm noting a few variants of how the data could be returned. For now I'm going with a rather simple return type which will just include the temperature and the name of the location.
-
-... Depending on the consumer we could also just return the ID of the location so the information if easier to process. But this is not required in the task ....
-// TODO check all returned data again
-// TODO decide on wether to return ID or name of the location
+- There is a need for some kind of validation to deal with unknown/untyped APIs and in this case ZOD fits the bill perfectly. It also comes with great type inference for further development benefits.
+- I changed the lib import to ESM for a (opinionated) better developer experience and to avoid mixing import syntax.
+- Chose to use only data from API B since I prefer this response format (see [previous section](#1-first-impressions-of-the-apis)) and don't see the need for using both (see [next section](#3-expanding-the-solution))
+- To decide on a final return type I would need more information about how this function is intended to be used. In the [next section](#3-expanding-the-solution) I'm noting a few variants of how the data could be returned alternatively. For now I'm going with a rather simple return type which will just include the temperature and the ID of the location. For presentation I could fetch the location name via a getter-function via the locations's ID. In case a locations temperature could not be determined I mark this with `null`.
 
 ```ts
-{
-   name: string;
-   temperature: number;
-}[]
+type Weather = {
+  locationId: number;
+  temperature: number | null;
+};
 ```
 
-## Expanding the Solution
+## 3. Expanding the Solution
 
-Deciding on a different return type and thus a different implementation of the function would need a better understanding of the requirements. Below I have noted possible expansions or alternative to the current solution:
+To decide on a different return type and thus a different implementation of the function I would need a better understanding of the requirements. Below I have noted possible expansions or alternatives to the current solution:
 
-- handle discrepancies in temperature: we might get different temperature values how should we handle those? This very much depends on the goal of API that we are creating: we could return a temperature range
+- **Handle discrepancies in temperature**: in case we might get different temperature when querying in API A and we could return a temperature range instead
 
 ```ts
-{
-   location: string;
+type Weather = {
+   locationId: number;
    temperatureRange: [number, number]
-}[]
+}
 ```
 
-- Handle unavailability: What if a service does not return for a given location or is unavailable? We could query the other API as back-up and note in the response where the data comes from. Or what if our preferred service B returns data with a measuring point lat/long coordinates that are far from the location that we requested? Should we return the temperature of API A instead?
+- **Handle unavailability**: What if a service does not return for a given location or is unavailable? We could query the other API as back-up and note in the response where the data came from. Or what if our preferred service B returns data with a measuring point lat/long coordinates that are far from the location that we requested? Should we return the temperature of API A instead?
 
 ```ts
-{
-   location: string;
+type Weather = {
+   locationId: number;
    temperature: number;
    source: 'A' | 'B';
-}[]
+}
 ```
 
-- Handle required detail: who are the consumers of our function? Do they require a higher level of detail? Maybe we should combine the responses from both APIs and try to return as much information as possible?
+- **Handle required detail**: who are the consumers of our function? Do they require a higher level of detail? Maybe we should combine the responses from both APIs and try to return as much information as possible?
 
 ```ts
-{
+type Weather = {
    location: Location,
    temperature: number;
-   source: 'A' | 'B'
-   unit: 'Celsius';
-   measurement?: 'IOT-Sensor' | '...' // try to infer categories
+   unit: 'C' | 'F';
+   source: 'A' | 'B' // use to create discriminated union types
+   measurement?: 'IOT-Sensor' | '...' // try to infer categories by scraping a lot of locations
    distanceToMeasuringPoint?: number;
    elevation?: number
    // ...
-}[]
+}
 ```
