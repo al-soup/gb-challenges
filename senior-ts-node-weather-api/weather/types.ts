@@ -12,6 +12,6 @@ export type ApiAResponse = z.infer<typeof apiAResponseSchema>;
 export type ApiBResponse = z.infer<typeof apiBResponseSchema>;
 
 export type Weather = {
-  location: string;
-  weather: number;
+  locationId: number;
+  temperature: number | null;
 };

@@ -31,8 +31,6 @@ const locations = [
 // 3. SOLUTION
 // --------------------
 
-import { getTemperaturesForLocations } from './weather';
+import { getWeatherForLocations } from './weather';
 
-getTemperaturesForLocations(locations).then((temperatures) =>
-  console.table(temperatures),
-);
+getWeatherForLocations(locations).then((weather) => console.table(weather));
