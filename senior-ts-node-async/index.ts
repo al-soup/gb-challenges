@@ -17,7 +17,7 @@ type AdId = number;
 type ImpressionCount = number;
 type ImpressionSummary = {
   totalImpressions: ImpressionCount;
-  executionTime: number; // in milliseconds
+  executionTime: number;
 };
 
 const ads: Ad[] = [
@@ -69,10 +69,17 @@ export const getAllImpressions = async (): Promise<ImpressionSummary> => {
   const adImpressions = new Map<AdId, ImpressionCount>();
 
   const fetchAdImpressions = adIds.map(async (adId: AdId) => {
-    const ad = await getAdById(adId);
-    if (!ad) return;
+    let adImpression: Impression | undefined;
+    try {
+      const ad = await getAdById(adId);
+      if (!ad) return;
 
-    const adImpression = await getAdImpression(ad?.impressionId);
+      adImpression = await getAdImpression(ad?.impressionId);
+    } catch (error) {
+      console.error(`Error fetching ad impression for adId ${adId}:`, error);
+
+      return;
+    }
 
     if (adImpression) {
       adImpressions.set(adId, adImpression.impressions);
@@ -85,7 +92,7 @@ export const getAllImpressions = async (): Promise<ImpressionSummary> => {
 
   // Sum up the results
   const totalImpressions = [...adImpressions.values()].reduce(
-    (total, impressions) => total + impressions,
+    (sum, impressions) => sum + impressions,
     0
   );
 
