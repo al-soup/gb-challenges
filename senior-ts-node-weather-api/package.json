@@ -2,6 +2,7 @@
   "name": "senior-ts-node-weather-api",
   "version": "1.0.0",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "start": "npx tsx ./index.ts",
     "build-and-obfuscate": "tsc ./libs/api.repository.ts --outDir ./libs && npx javascript-obfuscator ./libs/api.repository.js --output ./libs/api.repository.js"
@@ -10,7 +11,8 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@digitak/esrun": "^3.2.26"
+    "@digitak/esrun": "^3.2.26",
+    "zod": "^4.0.15"
   },
   "devDependencies": {
     "@types/node": "^22.13.5",
