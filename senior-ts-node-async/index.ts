@@ -86,8 +86,10 @@ export const getAllImpressions = async (): Promise<ImpressionSummary> => {
     }
   });
 
-  // Run fetches for all ads concurrently. The minimum execution time of `getAdImpressions` is
-  // the greatest sum of the duration of `getAdById` + `getAdImpression` for an adId.
+  // Run fetches for all ads and their impressions concurrently and write each result to the map as they are returned.
+  // Using the event loop in this way will handle multiple requests more efficiently with concurrency than waiting for each one sequentially.
+  // The minimum execution time of `getAdImpressions` is the greatest sum of the duration of `getAdById` + `getAdImpression` for a given adId.
+  // An alternative with parallel execution via worker threads is not suitable for this task as it is more I/O related than CPU extensive.
   await Promise.all(fetchAdImpressions);
 
   // Sum up the results
